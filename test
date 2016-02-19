@@ -1,0 +1,135 @@
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+import os, datetime
+
+app = Flask(__name__)
+#restarting flask will automatically reset session because of a new key
+#app.secret_key = os.urandom(32)
+app.secret_key = "temp"
+
+@app.route('/')
+@app.route('/home',methods=['GET','POST'])
+@app.route('/home/<user>',methods = ['GET','POST'])
+def home(user=None):
+    if request.method=='POST':
+        text = request.form["tester"]
+        return render_template('home.html',test2=text)
+    user = {'nickname': 'Miguel'}  # fake user
+    return render_template('home.html',
+                           title='Home',
+                           user=user)
+
+
+
+@app.route('/follow',methods = ['GET','POST'])
+def friend():
+    if session.get('authenticated') != True:
+        flash("You must be signed in to follow others")
+        return redirect(url_for('login'))
+    if request.method=='POST':
+        if verifyUser(request.form["friendEmail"]):
+            friendRequest(request.form["friendEmail"])
+        else:
+            flash("Unable to follow " + request.form["friendEmail"] + " User does not exist !")
+    return render_template('follow.html')
+
+
+@app.route('/followers')
+def listFollowers():
+    if session.get('authenticated') != True:
+        flash("You must first sign in")
+        return redirect(url_for('login'))
+    followingList = []
+    followersList = []
+    following= os.path.realpath('.')+"/database/"+ session['email'] +"following.txt"
+    followers= os.path.realpath('.')+"/database/"+ session['email'] +"followers.txt"
+    with open(following,"a+") as foo:
+        followingList = foo.readlines()
+    with open(followers,"a+") as foo2:
+        followersList = foo2.readlines()
+    return render_template('listFriends.html',following=followingList,followers=followersList)
+
+
+
+
+@app.route('/login', methods = ['GET','POST'])
+def login():
+    if session.get('authenticated') == True:
+        flash("You are already logged in!")
+        return redirect(url_for('home'))
+    if request.method=='POST':
+        if verifyUser(request.form["email"],request.form["password"]):  #If the email was verfied, user will be logged in
+            session['authenticated']=True
+            session['email']= request.form["email"]
+            return redirect(url_for('home'))
+        else:
+            return render_template('logreg.html', action="Failure",title="Login Page")
+    return render_template("logreg.html",registerPage="/register")
+
+@app.route('/register', methods = ['GET','POST'])
+def register():
+    if session.get('authenticated') == True:
+        return redirect(url_for('home'))
+    if request.method=='POST':
+        if (verifyUser(request.form["email"])):     #If true, the email is in use and we send an error page
+            flash("The email you have entered is already in use")
+            return render_template('logreg.html', action="Failure",title="Register Page",type = "register")
+        else:
+            writeToFile(request.form["email"],request.form["password"],request.form["name"])
+            session['username']=request.form["name"]
+            session['email']= request.form["email"]
+            session['authenticated']=True
+            return redirect(url_for('home'))
+    return render_template("logreg.html",type="register", loginPage="/login")   #by default we have the standard registration page
+
+@app.route("/logout")
+def logout():
+    if session.get('authenticated') == True:
+        session.clear()
+    return redirect(url_for('home'))
+
+def writeToFile(email,password,name):
+     filePath = os.path.realpath('.')+"/database/"+email +".txt"
+     with open(filePath,"a+") as foo:
+        foo.write(email+";"+password+";"+name +"\n")
+
+def friendRequest(friendEmail):
+    myFile= os.path.realpath('.')+"/database/"+ session['email'] +"following.txt"
+    friendFile= os.path.realpath('.')+"/database/"+ friendEmail +"followers.txt"
+    with open(myFile,"a+") as foo:
+        if friendEmail+"\n" not in foo:
+            foo.write(friendEmail +  "\n")
+            flash("Successfully added " + friendEmail)
+    with open(friendFile,"a+") as foo2:
+        if session['email'] +  "\n" not in foo2:
+            foo2.write(session['email'] +  "\n")
+
+def verifyUser(email,password=None):
+    filePath = os.path.realpath('.')+"/database/"+email +".txt"
+    if password == None:        #Used for the register verification
+        return os.path.exists(filePath)
+    else:
+        try:                    #Check Login verification
+            with open(filePath,"r") as f:
+                for line in f:
+                    userData = line.strip().split(";")
+                    if (email == userData[0] and password ==userData[1]):
+                        return True
+                flash("Invalid password and username combination")
+                return False
+        except Exception as e:
+            flash("Email address does not exist in database")
+
+
+'''
+@app.route('/tester/<content>')
+def test2(content):
+    return render_template("header.html",content=content)
+
+@app.route('/tester')
+def test():
+    return redirect(url_for('test2',content="kevin"))
+
+'''
+
+if __name__ == '__main__':
+    app.run(debug=True)

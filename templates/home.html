@@ -1,0 +1,64 @@
+{% extends "header.html" %}
+{% block body%}
+<title> Learning Flask</title>
+
+
+<blockquote>
+Wwelcome
+	<footer>hi</footer>
+</blockquote>
+
+<div class="container-fluid">
+{% if  session['authenticated'] %}
+{% if  session['email'] != None %}
+print {{session['authenticated']}} {{session['email']}}
+{% endif %}
+	<form method = "post">
+		<textarea rows="5" cols="30" maxlength="100" autocomplete="off"  name = "tester" placeholder= " Enter text Here" /></textarea>
+		<br>
+			<button type = "submit" class = "btn btn-primary" style="width: 100px;float: left;
+    margin-right: 1000px;">
+				<span class="glyphicon glyphicon-pencil"/>
+			</button>
+		</form>
+{% endif %}
+			<div class = "row">
+				<div class = "col-md-4"> 
+					<h1 class = "test">{{test2}}</h1>
+				</div>
+				<div class = "col-md-4"> 
+					<h1 class = "test">Hello </h1>
+				</div>
+				<div class = "col-md-4"> 
+					<h1 class = "test">Hello </h1>
+				</div>
+				<div class = "col-md-4"> 
+					<h1 class = "test">Hello </h1>
+				</div>
+			</div>
+
+			<h1> {{title}}</h1>
+
+{{test}}
+			<h2> Twitter 2.0</h2>
+
+	{% for p in paragraph%}
+			<p>{{loop.length}} is the length</p>
+			<p> {{p}}  : {{loop.index}}</p>
+
+			<p> {{p}}  : {{loop.index}}</p>
+	{% endfor %}
+
+
+			<p> {{p}}  : {{loop.index}}</p>
+
+			<p> {{p}}  : {{loop.index}}</p>
+			<p> {{p}}  : {{loop.index}}</p>
+			<p> {{p}}  : {{loop.index}}</p>
+			<p> {{p}}  : {{loop.index}}</p>
+			<!--	This is :  {{myfunction}}
+	
+	-->
+
+		</div>
+{% endblock %}

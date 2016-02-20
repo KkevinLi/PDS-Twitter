@@ -44,7 +44,7 @@ body {
 	<li><a href="tweets">View My Tweets</a></li>
 	
 	{% if session['authenticated'] %}
-			<li><a href="profile">{{session['email']}}'s Profile</a></li>
+			<li class = "disabled"><a href="#">{{session['email']}}'s Profile</a></li>
 			<li><a href="logout">Logout</a></li>
 	{% else %}
 		<li><a href="login"<span style="color:green;">Login</span></a></li>

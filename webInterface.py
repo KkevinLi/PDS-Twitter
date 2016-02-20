@@ -1,24 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import os, datetime
+import os
 
 app = Flask(__name__)
 #restarting flask will automatically reset session because of a new key
 #app.secret_key = os.urandom(32)
 app.secret_key = "temp"
 
+#still testing additional features
 @app.route('/')
 @app.route('/home',methods=['GET','POST'])
 @app.route('/home/<user>',methods = ['GET','POST'])
 def home(user=None):
     if request.method=='POST':
         text = request.form["tester"]
-        return render_template('home.html',test2=text)
-    user = {'nickname': 'Miguel'}  # fake user
-    return render_template('home.html',
-                           title='Home',
-                           user=user)
+        writeTweetAll(text)
+    if session.get('authenticated') == True:
+        messageList = []
+        messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "FriendTweet.txt"
+        with open(messageFile,"r") as foo:
+            messageList = foo.readlines()
+            return render_template('home.html',messageList=messageList)
 
-
+    return render_template('home.html',user=user)
 
 @app.route('/follow',methods = ['GET','POST'])
 def friend():
@@ -31,7 +34,6 @@ def friend():
         else:
             flash("Unable to follow " + request.form["friendEmail"] + " User does not exist !")
     return render_template('follow.html')
-
 
 @app.route('/followers')
 def listFollowers():
@@ -48,8 +50,16 @@ def listFollowers():
         followersList = foo2.readlines()
     return render_template('listFriends.html',following=followingList,followers=followersList)
 
-
-
+@app.route('/tweets', methods = ['GET','POST'])
+def displayTweets(friendsTweet=None):
+    if session.get('authenticated') != True:
+        flash("Only signed in users can view tweets")
+        return redirect(url_for('home'))
+    messageList = []
+    messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "Tweets.txt"
+    with open(messageFile,"r") as foo:
+        messageList = foo.readlines()
+        return render_template('myTweets.html',messageList=messageList)
 
 @app.route('/login', methods = ['GET','POST'])
 def login():
@@ -119,8 +129,20 @@ def verifyUser(email,password=None):
         except Exception as e:
             flash("Email address does not exist in database")
 
+def writeTweetAll(tweet):
+    myTweet = os.path.realpath('.')+ "/database/" + session['email'] + "Tweets.txt"
+    friends= os.path.realpath('.')+"/database/"+ session['email'] + "followers.txt"
+#For all users who follow you, write into their file the tweet you made
+    with open(friends,'a+') as foo:
+       for line in foo:
+            with open((os.path.realpath('.')+ "/database/"+line.strip()+"FriendTweet.txt") ,"a+") as textStore:
+                textStore.write(session['email'] + ": " + tweet + "\n")
+    with open(myTweet,'a+') as myFile:
+        myFile.write(tweet + "\n")
 
 '''
+For later use
+
 @app.route('/tester/<content>')
 def test2(content):
     return render_template("header.html",content=content)

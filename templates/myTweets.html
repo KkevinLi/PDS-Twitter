@@ -1,0 +1,31 @@
+{% extends "header.html" %}
+{% block header%}
+<style>
+	.container {
+		padding-top: 50px;
+        max-width: 100%;
+  }
+</style>   
+ {% endblock %}
+
+{% block body %}
+
+<div class = "container">
+	<div class = "row">
+	<h1 class = "text-info">All the stuff you have shared with the world:</h1> <br>
+		
+	{% for p in messageList%}
+	<div class = "col-md-6">
+			<ul>
+				<p> {{p}} </p>
+			</ul>
+			</div>
+		{% endfor %}
+
+		
+
+	</div>
+</div>
+
+	{% endblock %}
+

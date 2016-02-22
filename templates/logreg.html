@@ -1,35 +1,27 @@
 {% extends "header.html" %}
-{% block header%}
-
-<title> {{title}}</title>
-
-<div class="container form-signin">
-	<h1 class = "text-primary">
-		<p style="text-align: center;"> Join  Twitter 2.0 Today!</p>
-	</h1>
-	{% endblock %}
-
-	{% block body%}
-	{% if action != "success" %}
-	<form method = "post">
-		{% if type == "register" %}
-		<p class = "text-warning" style="text-align: center;"> Have an Account? <a href = {{loginPage}}> Login Here! </a>
-		</p>
-
-		<input type="text" class = "form-control" name="name" placeholder="Name"  required>
-	    {% endif %}
-			<input type="email" class = "form-control" name="email"  placeholder="Email"  required>
-				<input type="password" class = "form-control" name="password"  placeholder="Password"  required>
-					<button type = "submit" class = "btn btn-lg btn-block btn-primary">
-			Submit
-					</button>
-				</form>
-	{% endif %}
-	{% if type != "register" %}
-				<p> Need an account? <a href = {{registerPage}}> Register Now! </a>
-	{% endif %}
-
-				</div>
-
-{% endblock %}
+	{% block header%}
+		<title> {{title}}</title>
+		<div class="container form-signin">
+			<h1 class = "text-primary">	<p style="text-align: center;"> Join  Twitter 2.0 Today!</p> </h1>
+			{% endblock %}
+	
+			{% block body%}
+				{% if action != "success" %}
+					<form method = "post">
+						{% if type == "register" %}
+							<p class = "text-warning" style="text-align: center;"> Have an Account? <a href = {{loginPage}}> Login Here! </a> </p>
+							<input type="text" class = "form-control" name="name" placeholder="Name"  required>
+						{% endif %}
+						<input type="email" class = "form-control" name="email"  placeholder="Email"  required>
+						<input type="password" class = "form-control" name="password"  placeholder="Password"  required>
+						<button type = "submit" class = "btn btn-lg btn-block btn-primary">	Submit	</button>
+					</form>
+				{% endif %}
 				
+				{% if type != "register" %}
+					<p> Need an account? <a href = {{registerPage}}> Register Now! </a>
+				{% endif %}
+	
+			{% endblock %}
+		</div>
+							

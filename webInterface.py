@@ -7,21 +7,25 @@ app = Flask(__name__)
 app.secret_key = "temp"
 
 #still testing additional features
-@app.route('/')
+@app.route('/',methods=['GET','POST'])
 @app.route('/home',methods=['GET','POST'])
 @app.route('/home/<user>',methods = ['GET','POST'])
 def home(user=None):
-    if request.method=='POST':
-        text = request.form["tester"]
+    messageList = []
+    if request.method =='POST':
+        text = request.form["tweet"]
         writeTweetAll(text)
     if session.get('authenticated') == True:
-        messageList = []
-        messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "FriendTweet.txt"
-        with open(messageFile,"r") as foo:
-            messageList = foo.readlines()
-            return render_template('home.html',messageList=messageList)
+        messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "FriendTweets.txt"
+        if (os.path.isfile(messageFile)):
+            with open(messageFile,"r") as foo:
+                messageList = foo.readlines()
+        else:
+            messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "myTweets.txt"
+            with open(messageFile,"a+") as foo:
+                messageList = foo.readlines()
 
-    return render_template('home.html',user=user)
+    return render_template('home.html',messageList=messageList,user=user)
 
 @app.route('/follow',methods = ['GET','POST'])
 def friend():
@@ -56,7 +60,7 @@ def displayTweets(friendsTweet=None):
         flash("Only signed in users can view tweets")
         return redirect(url_for('home'))
     messageList = []
-    messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "Tweets.txt"
+    messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "myTweets.txt"
     with open(messageFile,"r") as foo:
         messageList = foo.readlines()
         return render_template('myTweets.html',messageList=messageList)
@@ -90,6 +94,10 @@ def register():
             session['authenticated']=True
             return redirect(url_for('home'))
     return render_template("logreg.html",type="register", loginPage="/login")   #by default we have the standard registration page
+
+@app.route("/about")
+def about():
+    return render_template("AboutPage.html")
 
 @app.route("/logout")
 def logout():
@@ -130,13 +138,17 @@ def verifyUser(email,password=None):
             flash("Email address does not exist in database")
 
 def writeTweetAll(tweet):
-    myTweet = os.path.realpath('.')+ "/database/" + session['email'] + "Tweets.txt"
+    myTweet = os.path.realpath('.')+ "/database/" + session['email'] + "myTweets.txt"
     friends= os.path.realpath('.')+"/database/"+ session['email'] + "followers.txt"
 #For all users who follow you, write into their file the tweet you made
     with open(friends,'a+') as foo:
-       for line in foo:
-            with open((os.path.realpath('.')+ "/database/"+line.strip()+"FriendTweet.txt") ,"a+") as textStore:
-                textStore.write(session['email'] + ": " + tweet + "\n")
+        numFriends = 0
+        for line in foo:
+            if(line.strip() != ""):
+                numFriends += 1
+                with open((os.path.realpath('.')+ "/database/"+line.strip()+"FriendTweets.txt") ,"a+") as textStore:
+                    textStore.write(session['email'] + ": " + tweet + "\n")
+        session["numberOfFollowers"] = numFriends
     with open(myTweet,'a+') as myFile:
         myFile.write(tweet + "\n")
 

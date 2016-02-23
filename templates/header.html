@@ -38,7 +38,6 @@
 							<li><a href="follow"> Add&Follow </a></li>
 							<li><a href="followers"> Slaves&Idols </a></li>
 							<li><a href="tweets"> View My Tweets </a></li>
-						
 							{% if session['authenticated'] %}
 								<li class = "disabled"><a href="#">{{session['email']}}'s Profile</a></li>
 								<li><a href="logout">Logout</a></li>
@@ -46,6 +45,7 @@
 								<li><a href="login"<span style="color:green;">Login</span></a></li>
 								<li><a href="register"><span style="color:red;">Register</span></a></li>
 							{% endif %}
+							<li><a href="about"> AboutPage</a></li>
 					</div>
 			</div>
 		</div>	

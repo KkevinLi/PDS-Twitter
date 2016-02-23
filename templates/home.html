@@ -12,7 +12,7 @@
 		<div class = "col-md-6">
 {% if  session['authenticated'] %}
 	<form method = "post">
-		<textarea rows="5" cols="60" maxlength="100" autocomplete="off"  name = "tester" 
+		<textarea rows="5" cols="60" maxlength="100" autocomplete="off"  name = "tweet" 
 		placeholder= " Start Sharing your life by typing here!" /></textarea>
 			<button type = "submit" class = "btn btn-primary" style="width:407px; ">
 				<span class="glyphicon glyphicon-pencil"/>
@@ -21,10 +21,10 @@
 {% endif %}
 </div>
 
-	<h1 class = "text-info text-center"> Most Recent Tweets </h1> <br>
+	<h1 class = "text-info text-center"> Most Recent Friend Tweets </h1> <br>
 		
 	{% for p in messageList%}
-	<div class = "col-md-2">
+	<div class = "col-md-3">
 			<ul>
 				<p> {{p}} </p>
 			</ul>
@@ -34,8 +34,6 @@
 		
 
 	</div>
-
-
 		</div>
 		
 		

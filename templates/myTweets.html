@@ -11,14 +11,15 @@
 	{% block body %}
 		<div class = "container">
 			<div class = "row">
-				<h1 class = "text-info">All the stuff you have shared with the world:</h1> <br>	
-				{% for p in messageList%}
-					<div class = "col-md-6">
-						<ul>
-							<p> {{p}} </p>
-						</ul>
-					</div>
-				{% endfor %}
+				<h2 class = "text-info">All the stuff you have shared with the world (Most Recent is on the bottom!): </h2> <br>	
+					
+				<ol>
+					{% for p in messageList%}
+					
+						<li><p> {{p}} </p></li>
+					
+					{% endfor %}
+				</ol>
 			</div>
 		</div>
 		

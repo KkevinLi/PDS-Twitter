@@ -9,7 +9,8 @@
 				{% if action != "success" %}
 					<form method = "post">
 						{% if type == "register" %}
-							<p class = "text-warning" style="text-align: center;"> Have an Account? <a href = {{loginPage}}> Login Here! </a> </p>
+							<p class = "text-warning" style="text-align: center;"> Have an Account? 
+							<a href = "{{url_for('login')}}"> Login Here! </a> </p>
 							<input type="text" class = "form-control" name="name" placeholder="Name"  required>
 						{% endif %}
 						<input type="email" class = "form-control" name="email"  placeholder="Email"  required>
@@ -19,7 +20,7 @@
 				{% endif %}
 				
 				{% if type != "register" %}
-					<p> Need an account? <a href = {{registerPage}}> Register Now! </a>
+					<p> Need an account? <a href = "{{url_for('register')}}"> Register Now! </a>
 				{% endif %}
 	
 			{% endblock %}

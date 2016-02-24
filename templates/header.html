@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8">
@@ -32,20 +33,20 @@
 		<div class = "container-fluid ">
 			<div class = "row">	
 				<nav class = "navbar navbar-default transparent  navbar-fixed-top">
-				<a class = "navbar-brand pull-left" href="home"> <span class="text-primary" style="font-size:20px;"> Twitter 2.0 </a>
+				<a class = "navbar-brand pull-left" href="{{url_for('home')}}"> <span class="text-primary" style="font-size:20px;"> Twitter 2.0 </a>
 					<div class = "collapse navbar-collapse">
 						<ul class = "nav navbar-nav pull-right ">
-							<li><a href="follow"> Add&Follow </a></li>
-							<li><a href="followers"> Slaves&Idols </a></li>
-							<li><a href="tweets"> View My Tweets </a></li>
+							<li><a href="{{url_for('friend')}}"> Add&Follow </a></li>
+							<li><a href="{{url_for('displayTweets')}}"> View My Tweets </a></li>
 							{% if session['authenticated'] %}
-								<li class = "disabled"><a href="#">{{session['email']}}'s Profile</a></li>
-								<li><a href="logout">Logout</a></li>
+								<li><a href="{{url_for('profile')}}">{{session['email']}}'s Profile and Friends</a></li>
+								<li><a href="{{url_for('logout')}}">Logout</a></li>
+								<li><a href="{{url_for('delete')}}" onclick="return confirm('Your account will not be restorable if you click ok!')"><span style="color:red;"> Delete Account</span> </a></li>
 							{% else %}
-								<li><a href="login"<span style="color:green;">Login</span></a></li>
-								<li><a href="register"><span style="color:red;">Register</span></a></li>
-							{% endif %}
-							<li><a href="about"> AboutPage</a></li>
+								<li><a href="{{url_for('login')}}"><span style="color:green;">Login</span></a></li>
+								<li><a href="{{url_for('register')}}"><span style="color:blue;">Register</span></a></li>
+								{% endif %}
+							<li><a href="{{url_for('about')}}"> AboutPage</a></li>
 					</div>
 			</div>
 		</div>	
@@ -54,9 +55,16 @@
 			{% with msgs = get_flashed_messages() %}
 				{% if msgs %}
 					{%- for msg in msgs %}
+						{% if states == "fail" %}
+							
 						<div class="alert alert-danger">
 							<h4 style="text-align: center;">{{ msg }}	</h4>
 						</div>
+						{% else %}
+						<div class="alert alert-success">
+							<h4 style="text-align: center;">{{ msg }}	</h4>
+						</div>
+						{% endif %}
 					{% endfor -%}
 				{% endif %}
 			{% endwith %}					  

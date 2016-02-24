@@ -52,13 +52,19 @@ After Flask is installed, the program can be run using webInterface.py.
 												and login is able to check if the entered credentials is correct.
 		- writeTweetAll(tweet) : Takes in a string entered in the homepage and writes that to every follower's 
 								 text file. The message is also written to the user's tweet file.
-		
+		- Profile : This function uses both listFriends and myTweets. You by default see your own profile
+					with the names of people you follow and people you are followed by. You have the ability
+					to view your followers/following peers profile and tweets (if tweets exist). 
+					
 		- ListFriends : Using the listFollowers() function, this rendered page will show both followers 
 						and those you follow
+		- myTweets: HTML page that flushes all the data found in usersTweet
+		
 		- logreg : Using the jinja template we are able to use the same page for both login and 
 					register. Uses: VerifyUser and writeToFile functions.
-					
-		- myTweets: HTML page that flushes all the data found in usersTweet
+		
+		- Delete : This function removes the user from all his followers, people he follows and then
+					every file related to him will be deleted.
 		
 		- Tweeting : Embedded into the home page and uses the writeTweetAll which creates two new files	
 					 one for your own tweets and one which contain tweets from all friends
@@ -71,6 +77,6 @@ After Flask is installed, the program can be run using webInterface.py.
 		- kevin@gmail.com   : a file named in this manner  x@y will be the users email,name and password
 		- kevin@gmail.comfollowing : contain lines of user emails 
 		- kevin@gmail.comfollowers : Similar to the following txt file, this one only shows the people you follow
-		- kevin@gmail.comTweets : a text file containing ONLY the users tweets
-		- kevin@gmail.comFriendTweet : contains tweets from all your friends, but does not have timing control ATM
+		- kevin@gmail.commyTweets : a text file containing ONLY the users tweets
+		- kevin@gmail.comFriendTweets : contains tweets from all your friends, but does not have timing control ATM
 		

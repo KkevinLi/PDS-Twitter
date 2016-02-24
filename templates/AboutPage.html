@@ -7,7 +7,21 @@
 		</style>   	{% endblock %}
 	
 	{% block body %}
-		<title> About Page </title>
+	
+	{% if page == "Profile" %}
+		<title> Profile Page </title>
+		<div class = "container">
+		<h2> This is your own personal profile page! </h2>
+		 To show the number of friends you must first tweet! <br>
+			User Email : {{session['email']}} <br>
+			Number Of Friends : {{session["numberOfFollowers"]}} <br>
+		Remember the less that you have on the site the better!
+			</div>
+		
+		
+	
+	{% else %}
+	<title> About Page </title>
 	<div class = "container">
 		<h4> Welcome to a simplified web application which is a ripoff of twitter.
 			The concept is similar but please note that there are no private followers
@@ -15,7 +29,7 @@
 			people they wish to follow. Following others allow <br>you to view ALL their tweets ordered
 			from oldest to most recent. The people you follow will appear in your slave&idols page
 			and their tweets will show up in your home page.
-		
 		</h4>
 	</div>	
+	{% endif %}
 	{% endblock %}

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import os
+import os, datetime
 
 app = Flask(__name__)
 #restarting flask will automatically reset session because of a new key
@@ -10,20 +10,21 @@ app.secret_key = os.urandom(32)
 @app.route('/<path:user>',methods = ['GET','POST'])
 def home(states="good",user=None):
     messageList = []
-    if request.method =='POST':
-        text = request.form["tweet"]
-        writeTweetAll(text)
+    myTweet=[]
     if session.get('authenticated') == True:
+        if request.method =='POST':
+            text = request.form["tweet"]
+            writeTweetAll(text)
+
         messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "FriendTweets.txt"
         if (os.path.isfile(messageFile)):
             with open(messageFile,"r") as foo:
                 messageList = foo.readlines()
-        else:
-            messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "myTweets.txt"
-            with open(messageFile,"a+") as foo:
-                messageList = foo.readlines()
+        myMessageFile = os.path.realpath('.')+"/database/"+ session['email'] + "myTweets.txt"
+        with open(myMessageFile,"a+") as foo2:
+            myTweet = foo2.readlines()
 
-    return render_template('home.html',messageList=messageList,user=user,states=states)
+    return render_template('home.html',messageList=messageList,myTweet=myTweet,user=user,states=states)
 
 @app.route('/follow',methods = ['GET','POST'])
 def friend():

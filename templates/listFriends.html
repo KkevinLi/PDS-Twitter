@@ -6,15 +6,14 @@
 	{% endblock %}
 
 	{% block body %}
-	
 		<title> {{whoToLookUp}}'s Profile Page </title>
 		<div class = "container" style="text-align: center;">
 			<h1> This is {{whoToLookUp}}'s profile page! </h1>
-				<h2 class = "text-warning">User Email : {{whoToLookUp}} </h2><br>
+				<h2 class = "text-warning">User Email : {{whoToLookUp}} </h2>
 	
 		<div class = "row">
 		<div class = "col-md-6">
-		Profile Lookup!<br>
+		Profile Lookup!
 				<form method = "post">
 					<select name="lookup" required>
 						{% for p in following%}
@@ -30,7 +29,7 @@
 				</div>
 			<div class = "col-md-6">
 				
-		Tweets Lookup!<br>
+		Tweets Lookup!
 				<form method = "post">
 					<select name="tweetLookUp" required>
 						{% for p in following%}

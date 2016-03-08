@@ -1,6 +1,6 @@
-# Twitter 2.0
+# Fwitter
 
-Twitter 2.0 is a remake of Twitter using the Python programmign language and the Flask Framework.
+Fwitter is a remake of Twitter using the Python programmign language and the Flask Framework.
 It will be a multi-stage project and this is only the frontend part 1.
 Database is a directory used for storing all the users info and tweets.
 There are a bunch of files in the Database directory that can be removed for a fresh start. 
@@ -8,7 +8,7 @@ Register a new user to begin. Else   Email: s@g   password: "a" is already useab
 After Flask is installed, the program can be run using webInterface.py. 
 	(Debug Mode is left on intentionally and secret key is not random for easier testing)
 
-# Twitter 2.0 Features
+# Fwitter Features
 
 		- Logging and Registering: For each user create a txt with the user's Name, email and password		
 		- Logout : All session variables are cleared upon visiting this page.

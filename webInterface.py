@@ -1,10 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import os, datetime
+import os, datetime,socket
 
 app = Flask(__name__)
 #restarting flask will automatically reset session because of a new key
 app.secret_key = os.urandom(32)
 
+@app.route('/hi')
+def test():
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect(('localhost',80))
+    clientsocket.send('hellos')
+    return clientsocket.recv(1024)
 
 @app.route('/',methods=['GET','POST'])
 @app.route('/<path:user>',methods = ['GET','POST'])
@@ -88,16 +94,19 @@ def about():
     return render_template("AboutPage.html")
 
 @app.route("/profile", methods = ['GET','POST'])
-def profile():
-    if request.method == "POST":
-        if request.form["btn"] == "Look up Tweets":
-            try:
-                return displayTweets(request.form["tweetLookUp"].strip())
-            except Exception as e:
-                flash(request.form["tweetLookUp"] + " has no Tweets to share!")
-        else:
-            return listFollowers(request.form["lookup"].strip())
-    return listFollowers(session["email"])
+def profile(user=None):
+     if session.get('authenticated') == True:
+        if request.method == "POST":
+            if request.form["btn"] == "Look up Tweets":
+                try:
+                    return displayTweets(request.form["tweetLookUp"].strip())
+                except Exception as e:
+                    flash(request.form["tweetLookUp"] + " has no Tweets to share!")
+            else:
+                return listFollowers(request.form["lookup"].strip())
+        return listFollowers(session["email"])
+     flash("You must sign in before viewing profile")
+     return render_template('home.html', states="fail")
 
 @app.route("/logout")
 def logout():

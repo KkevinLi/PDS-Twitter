@@ -5,13 +5,6 @@ app = Flask(__name__)
 #restarting flask will automatically reset session because of a new key
 app.secret_key = os.urandom(32)
 
-@app.route('/hi')
-def test():
-    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    clientsocket.connect(('localhost',80))
-    clientsocket.send('hellos')
-    return clientsocket.recv(1024)
-
 @app.route('/',methods=['GET','POST'])
 @app.route('/<path:user>',methods = ['GET','POST'])
 def home(states="good",user=None):
@@ -62,13 +55,15 @@ def displayTweets(tweetToLookUp=None):
 def login():
     if session.get('authenticated') == True:
         flash("You are already logged in!")
-        return redirect(url_for('home',states="fail"))
+        return redirect(url_for('home'))
     if request.method=='POST':
-        if verifyUser(request.form["email"],request.form["password"]):  #If the email was verfied, user will be logged in
+        x = validate("login ", request.form["email"],request.form["password"])
+        if x == "pass":
             session['authenticated']=True
             session['email']= request.form["email"]
             return redirect(url_for('home'))
         else:
+            flash("Incorrect Username or Password")
             return render_template('logreg.html', action="Failure",title="Login Page",states="fail")
     return render_template("logreg.html",registerPage="/register")
 
@@ -77,11 +72,11 @@ def register():
     if session.get('authenticated') == True:
         return redirect(url_for('home'))
     if request.method=='POST':
-        if (verifyUser(request.form["email"])):     #If true, the email is in use and we send an error page
+        x = validate("register ", request.form["email"], request.form["password"], request.form["name"])
+        if x == "fail":
             flash("The email you have entered is already in use")
             return render_template('logreg.html', action="Failure",title="Register Page",type = "register",states="fail")
         else:
-            writeToFile(request.form["email"],request.form["password"],request.form["name"])
             session['username']=request.form["name"]
             session['email']= request.form["email"]
             session['authenticated']=True
@@ -177,6 +172,12 @@ def friendRequest(friendEmail):
         if session['email'] +  "\n" not in foo2 and friendEmail != session['email']:
             foo2.write(session['email'] +  "\n")
 
+
+def validate(request,email,password=" ",name = " "):
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect(('localhost',13002))
+    clientsocket.send(request + email + " " + password + " " + name + " ")
+    return clientsocket.recv(1024)
 
 def verifyUser(email,password=None):
     filePath = os.path.realpath('.')+"/database/"+email +".txt"

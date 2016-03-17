@@ -1,4 +1,4 @@
- #include <iostream>
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sstream>
@@ -35,8 +35,8 @@ bool filePathExist(const string& path){
 }
 //Adds myName if does not exist to friends followers and his name to 
 //my following list. Check will be done if I exist through login
-string friendRequest(const string& friendName,const string& myName){
-	string path,checkIfAdded;
+string friendRequest(const string& friendName, const string& myName){
+	string path, checkIfAdded;
 	int numberOfFail = 0;
 	int numberOfMyFail = 0;
 	fstream myfile;
@@ -70,11 +70,10 @@ string friendRequest(const string& friendName,const string& myName){
 	myfile.clear();
 	if (numberOfMyFail < 1)
 		myfile << (friendName + "\r\n");
-	return (numberOfFail+numberOfMyFail < 2) ? "pass" : "fail";
-
-
+	return (numberOfFail + numberOfMyFail < 2) ? "pass" : "fail";
 }
-//C
+
+//Used to check if info sent from client matches text files
 string loginVerification(const string& username, const string& password){
 	string user, pass, path, result = "fail";
 	fstream myfile;
@@ -87,6 +86,7 @@ string loginVerification(const string& username, const string& password){
 	}
 	return result;
 }
+// Checks if file name exist and if it doesnt regsiter user
 string registerAccountCheck(const string& username, const string& password, const string& name){
 	string path, result = "fail";
 	fstream myfile;
@@ -108,32 +108,31 @@ void createFile(const string& filename){
 void parser(char* buffer, int connfd){
 	istringstream iss(buffer);
 	string value;
-	string request,name,pass,id;
+	string request, name, pass, id;
 	iss >> request >> name >> pass >> id;
+
 	if (request == "login")
 		value = ((loginVerification(name, pass)));
-			
 	else if (request == "register")
 		value = registerAccountCheck(name, pass, id);
-
 	else if (request == "friend")
 		//Pass will be the current users email and name is the person he is adding
 		value = friendRequest(name, pass);
 	write(connfd, value.c_str(), 4);
 	cout << "\n" << value << endl;
-		
- }
+
+}
 
 int main() {
-//	string text;
-//	fstream myfile;
-//	string x = DBDIR + string("ke@gmasssssss.txt");
-//	myfile.open(x.c_str(), fstream::out | fstream::app);
-//	myfile.clear();
-//	myfile.seekg(0, ios::beg);
+	//	string text;
+	//	fstream myfile;
+	//	string x = DBDIR + string("ke@gmasssssss.txt");
+	//	myfile.open(x.c_str(), fstream::out | fstream::app);
+	//	myfile.clear();
+	//	myfile.seekg(0, ios::beg);
 	int n;
 	string xy;
-	xy= friendRequest("ke@gma", "kevin");
+	xy = friendRequest("ke@gma", "kevin");
 	cout << xy << endl;
 	int			listenfd, connfd;  // Unix file descriptors
 	struct sockaddr_in	servaddr;          // Note C use of struct
@@ -183,15 +182,15 @@ int main() {
 		fprintf(stderr, "Connected\n");
 		ticks = time(NULL);
 		snprintf(buff, sizeof(buff), "%.24s\r\n", ctime(&ticks));
-/*		int len = strlen(buff);
+		/*		int len = strlen(buff);
 		if (len != write(connfd, buff, strlen(buff))) {
-			perror("write to connection failed");
+		perror("write to connection failed");
 		}
-	*/	// We had a connection.  Do whatever our task is.
+		*/	// We had a connection.  Do whatever our task is.
 		cout << buff << endl;
 
-		read(connfd, buff,500);
-		 parser(buff,connfd);
+		read(connfd, buff, 500);
+		parser(buff, connfd);
 		cout << "Confirmation code  " << connfd << endl;
 		cout << "Server received:  " << buff << endl;
 
@@ -200,16 +199,16 @@ int main() {
 		//    for another.
 		close(connfd);
 	}	//receive a message from a client
-	
-/*
-		strcpy(buffer, "test");
-		fd = write(clientSocket, buffer, strlen(buffer));
-		cout << "Confirmation code  " << fd << endl;
 
-		cout << "buffer has:  " << strlen(buffer) << endl;
+	/*
+	strcpy(buffer, "test");
+	fd = write(clientSocket, buffer, strlen(buffer));
+	cout << "Confirmation code  " << fd << endl;
 
-		cout << "buffer has:  " << sizeof(buffer) << endl;
-		*/
-	
+	cout << "buffer has:  " << strlen(buffer) << endl;
+
+	cout << "buffer has:  " << sizeof(buffer) << endl;
+	*/
+
 	return 0;
 }

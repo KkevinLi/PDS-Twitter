@@ -1,109 +1,215 @@
-#include<stdio.h>
-#include<string.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<netdb.h>
-#include<arpa/inet.h>
+ #include <iostream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sstream>
+#include <fstream>
+#include <stdio.h>       // perror, snprintf
+#include <stdlib.h>      // exit
+#include <unistd.h>      // close, write
+#include <string.h>      // strlen
+#include <strings.h>     // bzero
+#include <sys/socket.h>  // socket, AF_INET, SOCK_STREAM, bind, listen, accept
+#include <netinet/in.h>  // servaddr, INADDR_ANY, htons
+using namespace std;
 
+#define	MAXLINE		4096	// max text line length
+#define	BUFFSIZE	8192    // buffer size for reads and writes
+#define  SA struct sockaddr
+#define	LISTENQ		1024	// 2nd argument to listen()
+#define PORT_NUM        13002
 
-void * get_in_addr(struct sockaddr * sa)
-{
-	if(sa->sa_family == AF_INET)
-	{
-		return &(((struct sockaddr_in *)sa)->sin_addr); 
+string getPath(const string& append, string& path){
+	char cwd[1024];
+	if (getcwd(cwd, sizeof(cwd)) != NULL){
+		strcat(cwd, ("/database/" + append).c_str());
+		path = string(cwd);
+		return path;
 	}
-	
-	return &(((struct sockaddr_in6 *)sa)->sin6_addr); 
+	else
+		perror("getcwd() error");
 }
+bool filePathExist(const string& path){
+	ifstream theFile((path + ".txt").c_str());
+	return theFile.good();
 
-int main(int argc, char * argv[])
-{
-	// Variables for writing a server. 
-	/*
-	1. Getting the address data structure.
-	2. Openning a new socket.
-	3. Bind to the socket.
-	4. Listen to the socket. 
-	5. Accept Connection.
-	6. Receive Data.
-	7. Close Connection. 
-	*/
-	int status;
-	struct addrinfo hints, * res;
-	int listner; 
-	
-	
-	// Before using hint you have to make sure that the data structure is empty 
-	memset(& hints, 0, sizeof hints);
-	// Set the attribute for hint
-	hints.ai_family = AF_UNSPEC; // We don't care V4 AF_INET or 6 AF_INET6
-	hints.ai_socktype = SOCK_STREAM; // TCP Socket SOCK_DGRAM 
-	hints.ai_flags = AI_PASSIVE; 
-	
-	// Fill the res data structure and make sure that the results make sense. 
-	status = getaddrinfo(NULL, "8000" , &hints, &res);
-	if(status != 0)
-	{
-		fprintf(stderr,"getaddrinfo error: %s\n",gai_strerror(status));
+}
+//Adds myName if does not exist to friends followers and his name to 
+//my following list. Check will be done if I exist through login
+string friendRequest(const string& friendName,const string& myName){
+	string path,checkIfAdded;
+	int numberOfFail = 0;
+	int numberOfMyFail = 0;
+	fstream myfile;
+	path = getPath(friendName.c_str(), path);
+	if (filePathExist(path)) {
+		myfile.open((path + "followers.txt").c_str(), fstream::in | fstream::out | fstream::app);
+		myfile.seekg(0, ios::beg);
+		while (myfile >> checkIfAdded){
+			if (checkIfAdded == myName){
+				numberOfFail++;
+				break;
+			}
+		}
+		myfile.clear();
+		if (!numberOfFail){
+			myfile << (myName + "\r\n");
+		}	myfile.close();
 	}
-	
-	// Create Socket and check if error occured afterwards
-	listner = socket(res->ai_family,res->ai_socktype, res->ai_protocol);
-	if(listner < 0 )
-	{
-		fprintf(stderr,"socket error: %s\n",gai_strerror(status));
+	else
+		return "fail"; // Could not add friend because he does not exist 
+	// Same Concept, used to add friend to my followers
+	path = getPath(myName.c_str(), path);
+	myfile.open((path + "following.txt").c_str(), fstream::in | fstream::out | fstream::app);
+	myfile.seekg(0, ios::beg);
+	while (myfile >> checkIfAdded){
+		if (checkIfAdded == friendName){
+			numberOfMyFail++;
+			break;
+		}
 	}
-	
-	// Bind the socket to the address of my local machine and port number 
-	status = bind(listner, res->ai_addr, res->ai_addrlen); 
-	if(status < 0)
-	{
-		fprintf(stderr,"bind: %s\n",gai_strerror(status));
+	myfile.clear();
+	if (numberOfMyFail < 1)
+		myfile << (friendName + "\r\n");
+	return (numberOfFail+numberOfMyFail < 2) ? "pass" : "fail";
+
+
+}
+//C
+string loginVerification(const string& username, const string& password){
+	string user, pass, path, result = "fail";
+	fstream myfile;
+	path = getPath(username.c_str(), path);
+	if (filePathExist(path)){
+		myfile.open((path + ".txt").c_str());
+		myfile >> user >> pass;
+		myfile.close();
+		if (username == user && pass == password) { result = "pass"; }
+	}
+	return result;
+}
+string registerAccountCheck(const string& username, const string& password, const string& name){
+	string path, result = "fail";
+	fstream myfile;
+	path = getPath(username.c_str(), path);
+	if (!filePathExist(path)) {
+		myfile.open((path + ".txt").c_str(), fstream::out | fstream::app);
+		myfile << username + " " + password + " " + name;
+		result = "pass";
+	}
+	return result;
+}
+void createFile(const string& filename){
+	fstream myfile;
+	string path;
+	path = getPath(filename.c_str(), path);
+	myfile.open((path + ".txt").c_str(), fstream::in | fstream::out | fstream::app);
+
+}
+void parser(char* buffer, int connfd){
+	istringstream iss(buffer);
+	string value;
+	string request,name,pass,id;
+	iss >> request >> name >> pass >> id;
+	if (request == "login")
+		value = ((loginVerification(name, pass)));
+			
+	else if (request == "register")
+		value = registerAccountCheck(name, pass, id);
+
+	else if (request == "friend")
+		//Pass will be the current users email and name is the person he is adding
+		value = friendRequest(name, pass);
+	write(connfd, value.c_str(), 4);
+	cout << "\n" << value << endl;
+		
+ }
+
+int main() {
+//	string text;
+//	fstream myfile;
+//	string x = DBDIR + string("ke@gmasssssss.txt");
+//	myfile.open(x.c_str(), fstream::out | fstream::app);
+//	myfile.clear();
+//	myfile.seekg(0, ios::beg);
+	int n;
+	string xy;
+	xy= friendRequest("ke@gma", "kevin");
+	cout << xy << endl;
+	int			listenfd, connfd;  // Unix file descriptors
+	struct sockaddr_in	servaddr;          // Note C use of struct
+	char		buff[MAXLINE];
+	time_t		ticks;
+
+	// 1. Create the socket
+	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		perror("Unable to create a socket");
+		exit(1);
 	}
 
-	status = listen(listner, 10); 
-	if(status < 0)
-	{
-		fprintf(stderr,"listen: %s\n",gai_strerror(status));
+	// 2. Set up the sockaddr_in
+
+	// zero it.  
+	memset(&servaddr, 0, sizeof(servaddr));
+	servaddr.sin_family = AF_INET; // Specify the family
+	// use any network card present
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_port = htons(PORT_NUM);	// daytime server
+
+	// 3. "Bind" that address object to our listening file descriptor
+	if (bind(listenfd, (SA *)&servaddr, sizeof(servaddr)) == -1) {
+		perror("Unable to bind port");
+		exit(2);
 	}
-	
-	// Free the res linked list after we are done with it	
-	freeaddrinfo(res);
-	
-	
-	// We should wait now for a connection to accept
-	int new_conn_fd;
-	struct sockaddr_storage client_addr;
-	socklen_t addr_size;
-	char s[INET6_ADDRSTRLEN]; // an empty string 
-		
-	// Calculate the size of the data structure	
-	addr_size = sizeof client_addr;
-	
-	printf("I am now accepting connections ...\n");
-	
-	while(1){
-		// Accept a new connection and return back the socket desciptor 
-		new_conn_fd = accept(listner, (struct sockaddr *) & client_addr, &addr_size);	
-		if(new_conn_fd < 0)
-		{
-			fprintf(stderr,"accept: %s\n",gai_strerror(new_conn_fd));
-			continue;
-		}
-	
-		inet_ntop(client_addr.ss_family, get_in_addr((struct sockaddr *) &client_addr),s ,sizeof s); 
-		printf("I am now connected to %s \n",s);
-		status = send(new_conn_fd,"Welcome", 7,0);
-		if(status == -1)
-		{
-			close(new_conn_fd);
-			_exit(4);
-		}
-		
+
+	// 4. Tell the system that we are going to use this sockect for
+	//    listening and request a queue length
+	if (listen(listenfd, LISTENQ) == -1) {
+		perror("Unable to listen");
+		exit(3);
 	}
-	// Close the socket before we finish 
-	close(new_conn_fd);	
+
+
+	for (;;) {
+		// 5. Block until someone connects.
+		//    We could provide a sockaddr if we wanted to know details of whom
+		//    we are talking to.
+		//    Last arg is where to put the size of the sockaddr if
+		//    we asked for one
+		fprintf(stderr, "Ready to connect.\n");
+		if ((connfd = accept(listenfd, (SA *)NULL, NULL)) == -1) {
+			perror("accept failed");
+			exit(4);
+		}
+		fprintf(stderr, "Connected\n");
+		ticks = time(NULL);
+		snprintf(buff, sizeof(buff), "%.24s\r\n", ctime(&ticks));
+/*		int len = strlen(buff);
+		if (len != write(connfd, buff, strlen(buff))) {
+			perror("write to connection failed");
+		}
+	*/	// We had a connection.  Do whatever our task is.
+		cout << buff << endl;
+
+		read(connfd, buff,500);
+		 parser(buff,connfd);
+		cout << "Confirmation code  " << connfd << endl;
+		cout << "Server received:  " << buff << endl;
+
+
+		// 6. Close the connection with the current client and go back
+		//    for another.
+		close(connfd);
+	}	//receive a message from a client
+	
+/*
+		strcpy(buffer, "test");
+		fd = write(clientSocket, buffer, strlen(buffer));
+		cout << "Confirmation code  " << fd << endl;
+
+		cout << "buffer has:  " << strlen(buffer) << endl;
+
+		cout << "buffer has:  " << sizeof(buffer) << endl;
+		*/
 	
 	return 0;
 }

@@ -11,23 +11,29 @@
 		<h1> Presenting Twitter 2.0</h1>
 			<p> Better Than The Original</p>
 </div>
+<script>
+function someFunction() {
+    var output = document.getElementById("content").value;
+    output = output.replace(/(?:\r\n|\r|\n)/g, ' ');
+   document.getElementById("content").value = output;
+}
+</script>
 <br>
 <div class="container-fluid">
 	<div class="row">
 		<div class = "col-md-6 col-md-offset-4">
 
 {% if  not session['authenticated'] %}
-
 	<h3> Please sign in to view and post tweets! </h3>
 {% else %}
-	<form method = "post">
-		<textarea rows="5" cols="60" maxlength="100" autocomplete="off"  name = "tweet" 
+	<form method = "post" >
+		<textarea rows="5" cols="60" maxlength="100" autocomplete="off"  name = "tweet" id = "content" 
 		placeholder= " Start Sharing your life by typing here!" /></textarea>
-			<button type = "submit" class = "btn btn-primary" style="width:407px; ">
+			<button type = "submit" class = "btn btn-primary" style="width:407px;" onclick='someFunction()'>
 				<span class="glyphicon glyphicon-pencil"/>
 			</button>
 		</form>
-
+<div id = "output"></div>
 </div>
 </div>
 <br>

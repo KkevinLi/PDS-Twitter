@@ -14,7 +14,9 @@
 <script>
 function someFunction() {
     var output = document.getElementById("content").value;
-    output = output.replace(/(?:\r\n|\r|\n)/g, ' ');
+   // output = output.replace(/(?:\r\n|\r|\n)/g, '<newline>');
+   output = output.replace(/\s/g, '<br>');
+   
    document.getElementById("content").value = output;
 }
 </script>

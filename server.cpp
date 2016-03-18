@@ -10,6 +10,7 @@
 #include <strings.h>     // bzero
 #include <sys/socket.h>  // socket, AF_INET, SOCK_STREAM, bind, listen, accept
 #include <netinet/in.h>  // servaddr, INADDR_ANY, htons
+#include <vector>
 using namespace std;
 
 #define	MAXLINE		4096	// max text line length
@@ -35,7 +36,23 @@ bool filePathExist(const string& path){
 }
 //Adds myName if does not exist to friends followers and his name to 
 //my following list. Check will be done if I exist through login
-
+string writeTweetAll(const string& myName, const string& tweet){
+	string path, followers, followerPath;
+	path = getPath(myName.c_str(), path);
+	fstream myfile, friendFile;
+	myfile.open((path + "followers.txt").c_str(), fstream::in | fstream::out | fstream::app);
+	myfile.seekg(0, ios::beg);
+	while (myfile >> followers){
+		followerPath = getPath(followers.c_str(), followerPath);
+		friendFile.open((followerPath + "FriendTweets.txt").c_str(), fstream::out | fstream::app);
+		friendFile << (myName + " " + tweet + "<end>");
+		friendFile.close();
+	}
+	myfile.close();
+	myfile.open((path + "myTweets.txt").c_str(), fstream::in | fstream::out | fstream::app);
+	myfile << (tweet + "<end>");
+	return "pass";
+}
 string friendRequest(const string& friendName, const string& myName){
 	string path, checkIfAdded;
 	int numberOfFail = 0;
@@ -99,6 +116,20 @@ string registerAccountCheck(const string& username, const string& password, cons
 	}
 	return result;
 }
+//Versatile Function used to get text from file. Used in Profile to get list of following/followers
+//Display all tweets from yourself and friendTweet file
+string getTweets(const string& user, const string& mineOrFriends){
+	string path, buffer,tweets;
+	path = getPath(user.c_str(), path);
+	fstream myfile;
+	myfile.open(((path + mineOrFriends + ".txt").c_str()), fstream::in | fstream::out | fstream::app);
+	myfile.seekg(0, ios::beg);
+	while (!myfile.eof()){
+		getline(myfile, buffer);
+		tweets += buffer;
+	}
+	return tweets;
+}
 void createFile(const string& filename){
 	fstream myfile;
 	string path;
@@ -113,77 +144,24 @@ void parser(char* buffer, int connfd){
 	iss >> request >> name >> pass >> id;
 
 	if (request == "login")
-		value = ((loginVerification(name, pass)));
+		value = loginVerification(name, pass);
 	else if (request == "register")
 		value = registerAccountCheck(name, pass, id);
 	else if (request == "friend")
-		//Pass will be the current users email and name is the person he is adding
-		value = friendRequest(name, pass);
-	write(connfd, value.c_str(), 4);
-	cout << "\n" << value << endl;
-
-}
-//C
-string loginVerification(const string& username, const string& password){
-	string user, pass, path, result = "fail";
-	fstream myfile;
-	path = getPath(username.c_str(), path);
-	if (filePathExist(path)){
-		myfile.open((path + ".txt").c_str());
-		myfile >> user >> pass;
-		myfile.close();
-		if (username == user && pass == password) { result = "pass"; }
+		value = friendRequest(name, pass);	//Pass will be the current users email and name is the person he is adding
+	else if (request == "tweet")
+		value = writeTweetAll(name, pass);	// pass is the tweet message for all of "names" followers
+	else if (request == "getTweets"){
+		string test = getTweets(name, pass);
+		write(connfd, test.c_str(), test.size());
+		return;
 	}
-	return result;
-}
-string registerAccountCheck(const string& username, const string& password, const string& name){
-	string path, result = "fail";
-	fstream myfile;
-	path = getPath(username.c_str(), path);
-	if (!filePathExist(path)) {
-		myfile.open((path + ".txt").c_str(), fstream::out | fstream::app);
-		myfile << username + " " + password + " " + name;
-		result = "pass";
-	}
-	return result;
-}
-void createFile(const string& filename){
-	fstream myfile;
-	string path;
-	path = getPath(filename.c_str(), path);
-	myfile.open((path + ".txt").c_str(), fstream::in | fstream::out | fstream::app);
-
-}
-void parser(char* buffer, int connfd){
-	istringstream iss(buffer);
-	string value;
-	string request,name,pass,id;
-	iss >> request >> name >> pass >> id;
-	if (request == "login")
-		value = ((loginVerification(name, pass)));
-			
-	else if (request == "register")
-		value = registerAccountCheck(name, pass, id);
-
-	else if (request == "friend")
-		//Pass will be the current users email and name is the person he is adding
-		value = friendRequest(name, pass);
 	write(connfd, value.c_str(), 4);
-	cout << "\n" << value << endl;
-		
- }
+	cout << "\n" << value <<"this is value" << endl;
 
+}
 int main() {
-//	string text;
-//	fstream myfile;
-//	string x = DBDIR + string("ke@gmasssssss.txt");
-//	myfile.open(x.c_str(), fstream::out | fstream::app);
-//	myfile.clear();
-//	myfile.seekg(0, ios::beg);
-	int n;
-	string xy;
-	xy= friendRequest("ke@gma", "kevin");
-	cout << xy << endl;
+
 	int			listenfd, connfd;  // Unix file descriptors
 	struct sockaddr_in	servaddr;          // Note C use of struct
 	char		buff[MAXLINE];
@@ -233,11 +211,7 @@ int main() {
 		ticks = time(NULL);
 		snprintf(buff, sizeof(buff), "%.24s\r\n", ctime(&ticks));
 
-		/*		int len = strlen(buff);
-		if (len != write(connfd, buff, strlen(buff))) {
-		perror("write to connection failed");
-		}
-		*/	// We had a connection.  Do whatever our task is.
+		// We had a connection.  Do whatever our task is.
 		cout << buff << endl;
 
 		read(connfd, buff, 500);
@@ -260,18 +234,5 @@ int main() {
 		cout << "buffer has:  " << sizeof(buffer) << endl;
 		*/
 	
-=======
-
-	/*
-	strcpy(buffer, "test");
-	fd = write(clientSocket, buffer, strlen(buffer));
-	cout << "Confirmation code  " << fd << endl;
-
-	cout << "buffer has:  " << strlen(buffer) << endl;
-
-	cout << "buffer has:  " << sizeof(buffer) << endl;
-	*/
-
->>>>>>> cServer
 	return 0;
 }

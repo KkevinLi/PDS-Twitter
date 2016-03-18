@@ -2,9 +2,7 @@ import socket
 
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientsocket.connect(('localhost',13002))
-clientsocket.send("friend hellow kevin i")
+b = ""
+clientsocket.send("getTweets ke@gma myTweets ")
 x= clientsocket.recv(1024)
-if x == "pass":
-	print "Hell yea!"
-else:
-	print x
+print x.split()

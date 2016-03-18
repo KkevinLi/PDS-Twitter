@@ -13,16 +13,15 @@ def home(states="good",user=None):
     if session.get('authenticated') == True:
         if request.method =='POST':
             text = request.form["tweet"]
-            writeTweetAll(text)
-
-        messageFile = os.path.realpath('.')+"/database/"+ session['email'] + "FriendTweets.txt"
-        if (os.path.isfile(messageFile)):
-            with open(messageFile,"r") as foo:
-                messageList = foo.readlines()
-        myMessageFile = os.path.realpath('.')+"/database/"+ session['email'] + "myTweets.txt"
-        with open(myMessageFile,"a+") as foo2:
-            myTweet = foo2.readlines()
-
+            validate("tweet ", session['email'], text)
+        
+        userFriendsTweet = (validate("getTweets ",session['email'],"FriendTweets")).replace("<br>"," ")
+        for i in userFriendsTweet.split("<end>"):
+            messageList.append(i) 
+        userTweet = (validate("getTweets ",session['email'],"myTweets")).replace("<br>"," ")
+        for i in userTweet.split("<end>"):
+            myTweet.append(i)
+   
     return render_template('home.html',messageList=messageList,myTweet=myTweet,user=user,states=states)
 
 @app.route('/follow',methods = ['GET','POST'])
@@ -45,19 +44,6 @@ def friend():
         flash(message)
         return render_template('follow.html',states=states)
     return render_template('follow.html')
-
-@app.route('/tweets', methods = ['GET','POST'])
-def displayTweets(tweetToLookUp=None):
-    if session.get('authenticated') != True:
-        flash("Only signed in users can view tweets")
-        return redirect(url_for('home'))
-    if tweetToLookUp == None:
-        tweetToLookUp = session['email']
-    messageList = []
-    messageFile = os.path.realpath('.')+"/database/"+ tweetToLookUp + "myTweets.txt"
-    with open(messageFile,"r") as foo:
-        messageList = foo.readlines()
-    return render_template('myTweets.html',messageList=messageList,tweetToLookUp=tweetToLookUp)
 
 @app.route('/login', methods = ['GET','POST'])
 def login():
@@ -92,9 +78,19 @@ def register():
             return redirect(url_for('home'))
     return render_template("logreg.html",type="register", loginPage="/login")   #by default we have the standard registration page
 
-@app.route("/about")
-def about():
-    return render_template("AboutPage.html")
+@app.route('/tweets', methods = ['GET','POST'])
+def displayTweets(tweetToLookUp=None):
+    if session.get('authenticated') != True:
+        flash("Only signed in users can view tweets")
+        return redirect(url_for('home'))
+    if tweetToLookUp == None:
+        tweetToLookUp = session['email']
+    messageList = []
+    messages = validate("getTweets ",tweetToLookUp,"myTweets").replace("<br>"," ")
+    for i in messages.split("<end>"):
+        messageList.append(i)
+    return render_template('myTweets.html',messageList=messageList,tweetToLookUp=tweetToLookUp)
+
 
 @app.route("/profile", methods = ['GET','POST'])
 def profile(user=None):
@@ -110,6 +106,10 @@ def profile(user=None):
         return listFollowers(session["email"])
      flash("You must sign in before viewing profile")
      return render_template('home.html', states="fail")
+
+@app.route("/about")
+def about():
+    return render_template("AboutPage.html")
 
 @app.route("/logout")
 def logout():
@@ -165,19 +165,7 @@ def validate(request,email,password=" ",name = " "):
     clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(('localhost',13002))
     clientsocket.send(request + email + " " + password + " " + name + " ")
-    return clientsocket.recv(1024)
-
-def writeTweetAll(tweet):
-    myTweet = os.path.realpath('.')+ "/database/" + session['email'] + "myTweets.txt"
-    friends= os.path.realpath('.')+"/database/"+ session['email'] + "followers.txt"
-#For all users who follow you, write into their file the tweet you made
-    with open(friends,'a+') as foo:
-        for line in foo:
-            if(line.strip() != ""):
-                with open((os.path.realpath('.')+ "/database/"+line.strip()+"FriendTweets.txt") ,"a+") as textStore:
-                    textStore.write(session['email'] + ": " + tweet + "\n")
-    with open(myTweet,'a+') as myFile:
-        myFile.write(session['email'] + ": " + tweet + "\n")
+    return clientsocket.recv(4096)
 
 def listFollowers(whoToLookUp):
     if session.get('authenticated') != True:
@@ -185,12 +173,15 @@ def listFollowers(whoToLookUp):
         return redirect(url_for('login'))
     followingList = []
     followersList = []
-    following= os.path.realpath('.')+"/database/"+ whoToLookUp +"following.txt"
-    followers= os.path.realpath('.')+"/database/"+ whoToLookUp +"followers.txt"
-    with open(following,"a+") as foo:
-        followingList = foo.readlines()
-    with open(followers,"a+") as foo2:
-        followersList = foo2.readlines()
+    following = validate("getTweets ", session['email'], "following").split()
+    
+    for i in following:
+        followingList.append(i)
+   
+    followers = validate("getTweets ", session['email'], "followers").split()
+    for i in followers:
+        followersList.append(i)
+   
     return render_template('listFriends.html',following=followingList,followers=followersList,whoToLookUp=whoToLookUp)
 
 

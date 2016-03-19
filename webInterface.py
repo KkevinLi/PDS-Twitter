@@ -42,9 +42,24 @@ def friend():
         else:
             message = "Cannot follow yourself"
         flash(message)
-        return render_template('follow.html',states=states)
-    return render_template('follow.html')
+        return render_template('follow.html',states=states,action="Follow")
+    return render_template('follow.html',action="Follow")
 
+@app.route('/unfollow',methods = ['GET','POST'])
+def unfriend():
+    message = "Cannot unfollow yourself"
+    states = "fail"
+    if session.get('authenticated') != True:
+        flash("You must be signed in to unfollow others")
+        return redirect(url_for('login'))
+    if request.method=='POST':
+        if(request.form["friendEmail"] != session["email"]):
+            validate("unfollow ", request.form["friendEmail"], session["email"])
+            message = ("Successfully removed " + request.form["friendEmail"])
+            states = "pass"
+            flash(message)
+        return render_template('follow.html',states=states, action="Unfollow")
+    return render_template('follow.html',action="unfollow")
 @app.route('/login', methods = ['GET','POST'])
 def login():
     if session.get('authenticated') == True:
@@ -119,46 +134,8 @@ def logout():
 
 @app.route("/delete")
 def delete():
-
     if session.get('authenticated') == True:
-        mypath= os.path.realpath('.')+"/database/"
-        myFile = os.path.realpath('.')+"/database/"+ session['email'] +"following.txt"
-        myFollowers = os.path.realpath('.')+"/database/"+ session['email'] +"followers.txt"
- # For all the people YOU follow remove yourself from THEIR follower's list
-        with open(myFile,'a+') as followFile:
-            for pplIFollow in followFile:
-                friendFile= os.path.realpath('.')+"/database/"+ pplIFollow.strip() +"followers.txt"
-                temp = []
-                with open(friendFile,'r') as followerFile:
-                    for myself in followerFile:
-                        if myself.strip() != session['email']:
-                            temp.append(myself)
-                with open(friendFile,'w') as rewrite:
-                    for friends in temp:
-                        rewrite.write(friends)
-#For all the PEOPLE following YOU, remove yourself from their following list
-        with open(myFollowers,'a+') as followersFile:
-            for followers in followersFile:
-                friendFollowing = os.path.realpath('.')+"/database/"+ followers.strip() +"following.txt"
-                temp = []
-                with open(friendFollowing,'r') as followingFile:
-                    for emails in followingFile:
-                        if emails.strip() != session['email']:
-                            temp.append(emails)
-                with open(friendFollowing,'w') as rewrite:
-                    for friends in temp:
-                        rewrite.write(friends)
-# Removes all files related to the user
-    try:
-        os.chdir(mypath)
-        for s,a,files in os.walk(mypath):
-            for breakdown in files:
-                if session['email'].strip() in breakdown:
-                     print breakdown
-                     os.remove(breakdown)
-        os.chdir("..")  # go back to previous location
-    except Exception as e:
-        pass
+        validate("delete ",session['email'])
     return redirect(url_for('logout'))
 
 def validate(request,email,password=" ",name = " "):
@@ -173,12 +150,12 @@ def listFollowers(whoToLookUp):
         return redirect(url_for('login'))
     followingList = []
     followersList = []
-    following = validate("getTweets ", session['email'], "following").split()
+    following = validate("getTweets ", whoToLookUp, "following").split()
     
     for i in following:
         followingList.append(i)
    
-    followers = validate("getTweets ", session['email'], "followers").split()
+    followers = validate("getTweets ", whoToLookUp, "followers").split()
     for i in followers:
         followersList.append(i)
    

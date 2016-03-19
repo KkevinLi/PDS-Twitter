@@ -1,10 +1,19 @@
-# Fwitter
+# Fwitter 
 
-Fwitter is a remake of Twitter using the Python programmign language and the Flask Framework.
-It will be a multi-stage project and this is only the frontend part 1.
+#Update 2.0
+	The latest version moves all the logic/file handling to a Unix C++ server run using Cygwin.
+	Start by running server.cpp and then run webInterface.py 
+	
+	2.0 Changes:
+		- Unfollow implementation
+		- Timestamps for tweets
+		- Prevent line breaks when tweeting
+		- Fixed various bugs
+		
+Fwitter is a remake of Twitter using the Python programming language and the Flask Framework.
 Database is a directory used for storing all the users info and tweets.
 There are a bunch of files in the Database directory that can be removed for a fresh start. 
-Register a new user to begin. Else   Email: s@g   password: "a" is already useable for testing
+Register a new user to begin.  Else Email: s@g   password: "abc" is already usable for testing
 After Flask is installed, the program can be run using webInterface.py. 
 	(Debug Mode is left on intentionally and secret key is not random for easier testing)
 

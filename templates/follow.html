@@ -1,8 +1,9 @@
 {% extends "header.html" %}
 	{% block header%} <!-- Include the bootstrap header -->	{% endblock %}
 	{% block body%}
+	<title> {{action}} Page </title>
 		<div class="container form-signin">
-			Enter the email of the person you wish to follow:
+			Enter the email of the person you wish to {{action}}:
 			<form method = "post">
 				<input type="email" class = "form-control" name="friendEmail"  placeholder="Email to Lookup" required>
 				<input type = "submit" value = "Send Request">

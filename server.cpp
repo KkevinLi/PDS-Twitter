@@ -1,3 +1,12 @@
+/*
+Kevin Li
+PDS Part 2
+A Unix C++ simple server passing messages between Python client. Client sends a short request
+and the server parses and sends back permission of "pass" and "fail" before client is able
+to continue such as login.
+
+*/
+
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -19,6 +28,7 @@ using namespace std;
 #define	LISTENQ		1024	// 2nd argument to listen()
 #define PORT_NUM        13002
 
+// Used in all functions to get the path to the txt file when given a username. Returns path to username's file
 string getPath(const string& append, string& path){
 	char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != NULL){
@@ -29,14 +39,17 @@ string getPath(const string& append, string& path){
 	else
 		perror("getcwd() error");
 }
+
+//Simple check to see if a txt file exist
 bool filePathExist(const string& path){
 	ifstream theFile((path + ".txt").c_str());
 	return theFile.good();
 
 }
+
 //Adds myName if does not exist to friends followers and his name to 
 //my following list. Check will be done if I exist through login
-string writeTweetAll(const string& myName, const string& tweet){
+string writeTweetAll(const string& myName, const string& tweet, time_t* ticks){
 	string path, followers, followerPath;
 	path = getPath(myName.c_str(), path);
 	fstream myfile, friendFile;
@@ -45,14 +58,16 @@ string writeTweetAll(const string& myName, const string& tweet){
 	while (myfile >> followers){
 		followerPath = getPath(followers.c_str(), followerPath);
 		friendFile.open((followerPath + "FriendTweets.txt").c_str(), fstream::out | fstream::app);
-		friendFile << (myName + " " + tweet + "<end>");
+		friendFile << (myName + " " + tweet + " (" + ctime(ticks) + ")<end>");
 		friendFile.close();
 	}
 	myfile.close();
 	myfile.open((path + "myTweets.txt").c_str(), fstream::in | fstream::out | fstream::app);
-	myfile << (tweet + "<end>");
+	myfile << (tweet +  " (" + ctime(ticks) + ")<end>");
 	return "pass";
 }
+
+//Checks if friend exist and if he does follow him
 string friendRequest(const string& friendName, const string& myName){
 	string path, checkIfAdded;
 	int numberOfFail = 0;
@@ -104,6 +119,7 @@ string loginVerification(const string& username, const string& password){
 	}
 	return result;
 }
+
 // Checks if file name exist and if it doesnt regsiter user
 string registerAccountCheck(const string& username, const string& password, const string& name){
 	string path, result = "fail";
@@ -116,6 +132,7 @@ string registerAccountCheck(const string& username, const string& password, cons
 	}
 	return result;
 }
+
 //Versatile Function used to get text from file. Used in Profile to get list of following/followers
 //Display all tweets from yourself and friendTweet file
 string getTweets(const string& user, const string& mineOrFriends){
@@ -130,14 +147,99 @@ string getTweets(const string& user, const string& mineOrFriends){
 	}
 	return tweets;
 }
-void createFile(const string& filename){
-	fstream myfile;
-	string path;
-	path = getPath(filename.c_str(), path);
-	myfile.open((path + ".txt").c_str(), fstream::in | fstream::out | fstream::app);
 
+//Similar to delete, rewrite my following file except for person to unfollow
+void unfollow(const string& unfollowee, const string& user){
+	string path, fpath, ppl_i_follow, followers;
+	path = getPath(user.c_str(), path);
+	vector<string> temp, temp2;
+	fstream myfile,friendFile;
+
+	myfile.open(((path + "following.txt").c_str()), fstream::in);
+	while (myfile >> ppl_i_follow){
+		if (ppl_i_follow != unfollowee)
+			temp.push_back(ppl_i_follow);
+	}
+	myfile.close();
+
+	myfile.open(((path + "following.txt").c_str()), fstream::out);
+	for (int i = 0; i < temp.size(); ++i){
+		myfile << (temp[i] + "\r\n");
+	}
+	myfile.close();
+	path = getPath(unfollowee.c_str(), path);
+	friendFile.open(((fpath + "followers.txt").c_str()), fstream::in);
+	while (friendFile >> followers){
+		if (followers != user)
+			temp2.push_back(followers);
+	}
+	friendFile.close();
+	friendFile.open(((path + "followers.txt").c_str()), fstream::out);
+	for (int i = 0; i < temp2.size(); ++i){
+		friendFile << (temp2[i] + "\r\n");
+	}
+	friendFile.close();
 }
-void parser(char* buffer, int connfd){
+
+
+// For all my followers remove myself and for all the people I follow remove myself from their txt file
+void deleteAccount(const string& user){
+	string path,fpath, ppl_i_follow,followers;
+	path = getPath(user.c_str(), path);
+	string textfiles[5] = { ".txt", "followers.txt", "following.txt", "myTweets.txt", "FriendTweets.txt" };
+	vector<string> temp,temp2;
+	fstream myfile, friendFile;
+	myfile.open(((path + "following.txt").c_str()), fstream::in);
+	while (myfile >> ppl_i_follow){
+		temp.push_back(ppl_i_follow);
+	}
+	for (int i = 0; i < temp.size(); ++i){
+		fpath = getPath(temp[i].c_str(), fpath);
+		friendFile.open(((fpath + "followers.txt").c_str()), fstream::in);
+		while (friendFile >> followers){
+			if (followers != user)
+				temp2.push_back(followers);
+		}
+		friendFile.close();
+		friendFile.open(((fpath + "followers.txt").c_str()), fstream::out);
+		for (int i = 0; i < temp2.size(); ++i){
+			friendFile << (temp2[i] + "\r\n");
+		}
+		friendFile.close();
+	}
+	myfile.close();
+	temp.clear();
+	temp2.clear();
+// For all my FOLLOWERS remove myself from their FOLLOWING list
+
+	myfile.open(((path + "followers.txt").c_str()), fstream::in);
+	while (myfile >> followers){
+		temp.push_back(followers);
+	}
+	for (int i = 0; i < temp.size(); ++i){
+		fpath = getPath(temp[i].c_str(), fpath);
+		friendFile.open(((fpath + "following.txt").c_str()), fstream::in);
+		while (friendFile >> ppl_i_follow){
+			if (ppl_i_follow != user)
+				temp2.push_back(ppl_i_follow);
+		}
+		friendFile.close();
+		friendFile.open(((fpath + "following.txt").c_str()), fstream::out);
+		for (int i = 0; i < temp2.size(); ++i){
+			friendFile << (temp2[i] + "\r\n");
+		}
+		friendFile.close();
+	}
+	myfile.close();
+
+	for (int i = 0; i < 5; ++i){
+		remove((path + textfiles[i]).c_str());
+	}
+}
+
+
+//From the client's message, parse the command and use the data to execute the command given
+void parser(char* buffer, int connfd,time_t * ticks){
 	istringstream iss(buffer);
 	string value;
 	string request, name, pass, id;
@@ -150,32 +252,36 @@ void parser(char* buffer, int connfd){
 	else if (request == "friend")
 		value = friendRequest(name, pass);	//Pass will be the current users email and name is the person he is adding
 	else if (request == "tweet")
-		value = writeTweetAll(name, pass);	// pass is the tweet message for all of "names" followers
+		value = writeTweetAll(name, pass, ticks);	// pass is the tweet message for all of "names" followers
 	else if (request == "getTweets"){
 		string test = getTweets(name, pass);
 		write(connfd, test.c_str(), test.size());
 		return;
 	}
+	else if (request == "unfollow"){
+		unfollow(name, pass);  // name is person to unfollow pass is myself
+		return;
+	}
+	else if (request == "delete"){
+		deleteAccount(name);
+		return;
+	}
 	write(connfd, value.c_str(), 4);
-	cout << "\n" << value <<"this is value" << endl;
-
 }
+
 int main() {
 
 	int			listenfd, connfd;  // Unix file descriptors
 	struct sockaddr_in	servaddr;          // Note C use of struct
 	char		buff[MAXLINE];
 	time_t		ticks;
-
+	
 	// 1. Create the socket
 	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("Unable to create a socket");
 		exit(1);
 	}
-
-	// 2. Set up the sockaddr_in
-
-	// zero it.  
+	
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET; // Specify the family
 	// use any network card present
@@ -194,14 +300,8 @@ int main() {
 		perror("Unable to listen");
 		exit(3);
 	}
-
-
 	for (;;) {
-		// 5. Block until someone connects.
-		//    We could provide a sockaddr if we wanted to know details of whom
-		//    we are talking to.
-		//    Last arg is where to put the size of the sockaddr if
-		//    we asked for one
+	
 		fprintf(stderr, "Ready to connect.\n");
 		if ((connfd = accept(listenfd, (SA *)NULL, NULL)) == -1) {
 			perror("accept failed");
@@ -211,19 +311,11 @@ int main() {
 		ticks = time(NULL);
 		snprintf(buff, sizeof(buff), "%.24s\r\n", ctime(&ticks));
 
-		// We had a connection.  Do whatever our task is.
-		cout << buff << endl;
-
-		read(connfd, buff, 500);
-		parser(buff, connfd);
-		cout << "Confirmation code  " << connfd << endl;
-		cout << "Server received:  " << buff << endl;
-
-
-		// 6. Close the connection with the current client and go back
-		//    for another.
+		// Only 500 bytes is needed to be read. Messages sent between are either "pass" or "fail"
+		read(connfd, buff, 500);	
+		parser(buff, connfd, &ticks);
 		close(connfd);
-	}	//receive a message from a client	
+	}	
 /*
 		strcpy(buffer, "test");
 		fd = write(clientSocket, buffer, strlen(buffer));

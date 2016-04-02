@@ -149,36 +149,41 @@ string getTweets(const string& user, const string& mineOrFriends){
 }
 
 //Similar to delete, rewrite my following file except for person to unfollow
-void unfollow(const string& unfollowee, const string& user){
+string unfollow(const string& unfollowee, const string& user){
+
 	string path, fpath, ppl_i_follow, followers;
 	path = getPath(user.c_str(), path);
-	vector<string> temp, temp2;
-	fstream myfile,friendFile;
+	fpath = getPath(unfollowee.c_str(), fpath);
+	if (filePathExist(fpath)) {
+		vector<string> temp, temp2;
+		fstream myfile, friendFile;
 
-	myfile.open(((path + "following.txt").c_str()), fstream::in);
-	while (myfile >> ppl_i_follow){
-		if (ppl_i_follow != unfollowee)
-			temp.push_back(ppl_i_follow);
-	}
-	myfile.close();
+		myfile.open(((path + "following.txt").c_str()), fstream::in);
+		while (myfile >> ppl_i_follow){
+			if (ppl_i_follow != unfollowee)
+				temp.push_back(ppl_i_follow);
+		}
+		myfile.close();
 
-	myfile.open(((path + "following.txt").c_str()), fstream::out);
-	for (int i = 0; i < temp.size(); ++i){
-		myfile << (temp[i] + "\r\n");
+		myfile.open(((path + "following.txt").c_str()), fstream::out);
+		for (int i = 0; i < temp.size(); ++i){
+			myfile << (temp[i] + "\r\n");
+		}
+		myfile.close();
+		friendFile.open(((fpath + "followers.txt").c_str()), fstream::in);
+		while (friendFile >> followers){
+			if (followers != user)
+				temp2.push_back(followers);
+		}
+		friendFile.close();
+		friendFile.open(((fpath + "followers.txt").c_str()), fstream::out);
+		for (int i = 0; i < temp2.size(); ++i){
+			friendFile << (temp2[i] + "\r\n");
+		}
+		friendFile.close();
+		return "pass";
 	}
-	myfile.close();
-	path = getPath(unfollowee.c_str(), path);
-	friendFile.open(((fpath + "followers.txt").c_str()), fstream::in);
-	while (friendFile >> followers){
-		if (followers != user)
-			temp2.push_back(followers);
-	}
-	friendFile.close();
-	friendFile.open(((path + "followers.txt").c_str()), fstream::out);
-	for (int i = 0; i < temp2.size(); ++i){
-		friendFile << (temp2[i] + "\r\n");
-	}
-	friendFile.close();
+	return "fail";
 }
 
 
@@ -253,15 +258,15 @@ void parser(char* buffer, int connfd,time_t * ticks){
 		value = friendRequest(name, pass);	//Pass will be the current users email and name is the person he is adding
 	else if (request == "tweet")
 		value = writeTweetAll(name, pass, ticks);	// pass is the tweet message for all of "names" followers
+	else if (request == "unfollow")
+		value = unfollow(name, pass);  // name is person to unfollow pass is myself
+
 	else if (request == "getTweets"){
 		string test = getTweets(name, pass);
 		write(connfd, test.c_str(), test.size());
 		return;
 	}
-	else if (request == "unfollow"){
-		unfollow(name, pass);  // name is person to unfollow pass is myself
-		return;
-	}
+	
 	else if (request == "delete"){
 		deleteAccount(name);
 		return;

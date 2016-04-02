@@ -7,7 +7,7 @@ app.secret_key = os.urandom(32)
 
 @app.route('/',methods=['GET','POST'])
 @app.route('/<path:user>',methods = ['GET','POST'])
-def home(states="good",user=None):
+def home(user=None):
     messageList = []
     myTweet=[]
     if session.get('authenticated') == True:
@@ -21,49 +21,45 @@ def home(states="good",user=None):
         userTweet = (validate("getTweets ",session['email'],"myTweets")).replace("<br>"," ")
         for i in userTweet.split("<end>"):
             myTweet.append(i)
-   
-    return render_template('home.html',messageList=messageList,myTweet=myTweet,user=user,states=states)
+        messageList = messageList[::-1]
+        myTweet = myTweet[::-1]
+    return render_template('home.html',messageList=messageList,myTweet=myTweet,user=user)
 
 @app.route('/follow',methods = ['GET','POST'])
 def friend():
-    message = "Cannot follow yourself"
-    states = "fail"
     if session.get('authenticated') != True:
-        flash("You must be signed in to follow others")
+        flash("You must be signed in to follow others",'error')
         return redirect(url_for('login'))
     if request.method=='POST':
         if(request.form["friendEmail"] != session["email"]):
             x = validate("friend ", request.form["friendEmail"], session["email"])
             if x== "pass":
-                 message = ("Successfully added " + request.form["friendEmail"])
-                 states = "pass"
+                 flash("Successfully added " + request.form["friendEmail"])
             else:
-                message = ("Unable to follow " + request.form["friendEmail"] + " User does not exist or you are already following him!")
+                flash("Unable to follow " + request.form["friendEmail"] + " User does not exist or you are already following him!",'error')
         else:
-            message = "Cannot follow yourself"
-        flash(message)
-        return render_template('follow.html',states=states,action="Follow")
+            flash("Cannot follow yourself",'error')
+
+        return render_template('follow.html',action="Follow")
     return render_template('follow.html',action="Follow")
 
-@app.route('/unfollow',methods = ['GET','POST'])
-def unfriend():
-    message = "Cannot unfollow yourself"
-    states = "fail"
+#@app.route('/unfollow',methods = ['GET','POST'])
+def unfriend(friendEmail = None):
     if session.get('authenticated') != True:
-        flash("You must be signed in to unfollow others")
+        flash("You must be signed in to unfollow others",'error')
         return redirect(url_for('login'))
-    if request.method=='POST':
-        if(request.form["friendEmail"] != session["email"]):
-            validate("unfollow ", request.form["friendEmail"], session["email"])
-            message = ("Successfully removed " + request.form["friendEmail"])
-            states = "pass"
-            flash(message)
-        return render_template('follow.html',states=states, action="Unfollow")
-    return render_template('follow.html',action="unfollow")
+    if(friendEmail != session["email"]):
+        states = validate("unfollow ", friendEmail, session["email"])
+        if states == "pass":
+            flash("Successfully removed " + friendEmail)
+        else:
+            flash(friendEmail + " Does not Exist!",'error')    
+        return render_template('home.html')
+    return render_template('home.html')
 @app.route('/login', methods = ['GET','POST'])
 def login():
     if session.get('authenticated') == True:
-        flash("You are already logged in!")
+        flash("You are already logged in!",'error')
         return redirect(url_for('home'))
     if request.method=='POST':
         x = validate("login ", request.form["email"],request.form["password"])
@@ -72,8 +68,8 @@ def login():
             session['email']= request.form["email"]
             return redirect(url_for('home'))
         else:
-            flash("Incorrect Username or Password")
-            return render_template('logreg.html', action="Failure",title="Login Page",states="fail")
+            flash("Incorrect Username or Password",'error')
+            return render_template('logreg.html', action="Failure",title="Login Page")
     return render_template("logreg.html",registerPage="/register")
 
 @app.route('/register', methods = ['GET','POST'])
@@ -83,8 +79,8 @@ def register():
     if request.method=='POST':
         x = validate("register ", request.form["email"], request.form["password"], request.form["name"])
         if x == "fail":
-            flash("The email you have entered is already in use")
-            return render_template('logreg.html', action="Failure",title="Register Page",type = "register",states="fail")
+            flash("The email you have entered is already in use",'error')
+            return render_template('logreg.html', action="Failure",title="Register Page",type = "register")
         else:
             session['username']=request.form["name"]
             session['email']= request.form["email"]
@@ -96,7 +92,7 @@ def register():
 @app.route('/tweets', methods = ['GET','POST'])
 def displayTweets(tweetToLookUp=None):
     if session.get('authenticated') != True:
-        flash("Only signed in users can view tweets")
+        flash("Only signed in users can view tweets",'error')
         return redirect(url_for('home'))
     if tweetToLookUp == None:
         tweetToLookUp = session['email']
@@ -104,6 +100,8 @@ def displayTweets(tweetToLookUp=None):
     messages = validate("getTweets ",tweetToLookUp,"myTweets").replace("<br>"," ")
     for i in messages.split("<end>"):
         messageList.append(i)
+    messageList.pop()
+    messageList = messageList[::-1]
     return render_template('myTweets.html',messageList=messageList,tweetToLookUp=tweetToLookUp)
 
 
@@ -115,12 +113,14 @@ def profile(user=None):
                 try:
                     return displayTweets(request.form["tweetLookUp"].strip())
                 except Exception as e:
-                    flash(request.form["tweetLookUp"] + " has no Tweets to share!")
+                    flash(request.form["tweetLookUp"] + " has no Tweets to share!",'error')
+            elif request.form["btn"] == "Unfollow user":
+                return unfriend(request.form["unfollow"].strip())
             else:
                 return listFollowers(request.form["lookup"].strip())
         return listFollowers(session["email"])
-     flash("You must sign in before viewing profile")
-     return render_template('home.html', states="fail")
+     flash("You must sign in before viewing profile",'error')
+     return render_template('home.html')
 
 @app.route("/about")
 def about():
@@ -146,7 +146,7 @@ def validate(request,email,password=" ",name = " "):
 
 def listFollowers(whoToLookUp):
     if session.get('authenticated') != True:
-        flash("You must first sign in")
+        flash("You must first sign in",'error')
         return redirect(url_for('login'))
     followingList = []
     followersList = []

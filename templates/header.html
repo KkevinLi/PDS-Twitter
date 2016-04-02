@@ -37,7 +37,6 @@
 					<div class = "collapse navbar-collapse">
 						<ul class = "nav navbar-nav pull-right ">
 							<li><a href="{{url_for('friend')}}"> Add&Follow </a></li>
-							<li><a href="{{url_for('unfriend')}}"> UnFollow </a></li>
 							<li><a href="{{url_for('displayTweets')}}"> View My Tweets </a></li>
 							{% if session['authenticated'] %}
 								<li><a href="{{url_for('profile')}}">{{session['email']}}'s Profile </a></li>
@@ -53,10 +52,10 @@
 		</div>	
 	{% block header %}{% endblock %}
 		 <!-- Display flashed messages -->
-			{% with msgs = get_flashed_messages() %}
+			{% with msgs = get_flashed_messages(with_categories=true) %}
 				{% if msgs %}
-					{%- for msg in msgs %}
-						{% if states == "fail" %}
+					{%- for category, msg in msgs %}
+						{% if category == "error" %}
 						<div class="alert alert-danger">
 							<h4 style="text-align: center;">{{ msg }}	</h4>
 						</div>

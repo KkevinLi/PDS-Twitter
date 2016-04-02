@@ -21,9 +21,8 @@
 	</div>
 		<div class = "row">
 		<div class = "col-md-6">
-		Profile Lookup!
 				<form method = "post">
-					<select name="lookup" required>
+					<select class = "form-control" name = "lookup" required>
 						{% for p in following%}
 							<option value = "{{p}}"> {{p}} </option>
 						{% endfor %}
@@ -39,9 +38,8 @@
 				</div>
 			<div class = "col-md-6">
 				
-		Tweets Lookup!
 				<form method = "post">
-					<select name="tweetLookUp" required>
+					<select class = "form-control" name = "tweetLookUp" required>
 						{% for p in following%}
 							<option value = "{{p}}"> {{p}} </option>
 						{% endfor %}
@@ -62,11 +60,24 @@
 				<div class = "col-md-6">
 					<h2 class = "text-info">People {{whoToLookUp}} currently follow:</h2>
 					{% for p in following%}
-						<ul>
-							<p> {{p}} </p>
-						</ul>
+						<div class = "col-md-6">			
+							<ul>
+								<p> {{p}} </p>
+							</ul>
+						</div>
 					{% endfor %}
-				</div>
+					
+			<form method = "post">
+			<select class = "form-control" name = "unfollow" required>
+				{% for p in following%}
+						
+					<option> {{p}} </option>
+					
+				{% endfor %}		
+			</select>
+			<input type = "submit" value = "Unfollow user" name = "btn">
+			</form>
+		</div>
 				<div class = "col-md-6">
 					<ul>	
 						<h2 class = "text-success">Here are all {{whoToLookUp}} followers:</h2>

@@ -1,6 +1,41 @@
 # Fwitter 
 
-#Update 2.0
+#Update 3.0 
+	Now Fwitter is equipped with the ability to handle multiple users through multi-threading. 
+		An array of locks were used to improve performance. My motive was to use a hash function 
+		on the user's file name and get the respective lock which would allow more users to access
+		their files(shared data) without waiting to retrieve one big lock. With 7 locks I hope to get an even
+		distribution with the hash function which would maximize concurrency.
+		
+	Function Changes:
+		(Before getting a lock, the file's name will be hashed to give you a lock)
+		writeTweetAll: 
+			Uses lockguard to get lock for the current users file
+			and write tweet to myself. After in a loop it gets a 
+			lockguard for every follower and writes message to them
+		
+		friendRequest: 2 lockguards, 1 for my following and 1 for friends	
+			follower file. Each lockguard will release once out of scope
+		
+		loginVerification: Lockguard just to open and see if credentials are correct
+		RegisterAccountCheck: Same concept as login, lock if possible and create
+		
+		getTweets: Only needs one lock to retrieve data from a txt file
+		
+		unfollow: Uses multiple locks, first a normal lock because I need to 
+			unlock my file after removing myself from all people I follow. Redo
+			for all my followers.
+			
+		deleteAccount: Same as unfollow
+		
+		
+	3.0 Changes:
+		- Unfollow moved to Profile Page
+			- Uses a dropdown rather than manual input
+			- Fixed bug which allows you to unfollow people who dont exist
+		- Tweeted messages and ViewMYTweets show messages in most recent order
+		- included a make file 
+##Update 2.0
 	The latest version moves all the logic/file handling to a Unix C++ server run using Cygwin.
 	Start by running server.cpp and then run webInterface.py 
 	
@@ -13,11 +48,11 @@
 Fwitter is a remake of Twitter using the Python programming language and the Flask Framework.
 Database is a directory used for storing all the users info and tweets.
 There are a bunch of files in the Database directory that can be removed for a fresh start. 
-Register a new user to begin.  Else Email: s@g   password: "abc" is already usable for testing
+Register a new user to begin.  Else Email: s@g   password: "a" is already usable for testing
 After Flask is installed, the program can be run using webInterface.py. 
 	(Debug Mode is left on intentionally and secret key is not random for easier testing)
 
-# Fwitter Features
+## Fwitter Features
 
 		- Logging and Registering: For each user create a txt with the user's Name, email and password		
 		- Logout : All session variables are cleared upon visiting this page.
